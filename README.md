@@ -9,3 +9,5 @@
 ffmpeg.exe拷贝到运行目录下的ffmpeg文件夹下 运行项目或者启动ffmpegSample.exe 就可以进行录屏，结束录屏后视频保存在运行根目录下。
 <img src="/ffmpegSolution/resources/01.gif"/>
 
+<h2><a href="https://github.com/yanjinhuagood/ffmpegSample/releases/download/Setup/FFMPEGSmple_Setup.exe">下载地址</a></h2>
+
