@@ -1,0 +1,8 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/DesktopRecord/.vs
+/DesktopRecord/DesktopRecord/bin/Debug
+/DesktopRecord/DesktopRecord/obj/Debug
+/DesktopRecord/packages/WPFDevelopers.1.1.0.1-preview7
