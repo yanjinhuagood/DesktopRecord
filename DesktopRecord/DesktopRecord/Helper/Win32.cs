@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -128,48 +130,53 @@ namespace DesktopRecord.Helper
                     File.Delete(file);
             }
             int num = 0;
-            while (IsRunning)
+            Task.Factory.StartNew(() => 
             {
-                num += 1;
-                Thread.Sleep(50);
-                Application.Current.Dispatcher.Invoke(new Action(() =>
+                while (IsRunning)
                 {
-                    var drawingVisual = new DrawingVisual();
-                    POINT mousePosition;
-                    using (DrawingContext drawingContext = drawingVisual.RenderOpen())
+                    Thread.Sleep(20);
+                    num += 1;
+                    Application.Current.Dispatcher.Invoke(new Action(() =>
                     {
-                        drawingContext.DrawImage(CaptureScreen(),
-                            new Rect(new Point(),
-                            new Size(screenWidth, screenHeight)));
-
-                        if (GetCursorPos(out mousePosition))
+                        var drawingVisual = new DrawingVisual();
+                        POINT mousePosition;
+                        using (DrawingContext drawingContext = drawingVisual.RenderOpen())
                         {
-                            var cursorSize = 30;
-                            var cursorHalfSize = cursorSize / 2;
-                            var cursorCenterX = mousePosition.X - SystemParameters.VirtualScreenLeft;
-                            var cursorCenterY = mousePosition.Y - SystemParameters.VirtualScreenTop;
-                            drawingContext.DrawImage(GetCursorIcon(),
-                                new Rect(new Point(cursorCenterX, cursorCenterY),
-                                new Size(cursorSize, cursorSize)));
+                            drawingContext.DrawImage(CaptureScreen(),
+                                new Rect(new Point(),
+                                new Size(screenWidth, screenHeight)));
 
+                            if (GetCursorPos(out mousePosition))
+                            {
+                                var cursorSize = 30;
+                                var cursorHalfSize = cursorSize / 2;
+                                var cursorCenterX = mousePosition.X - SystemParameters.VirtualScreenLeft;
+                                var cursorCenterY = mousePosition.Y - SystemParameters.VirtualScreenTop;
+                                drawingContext.DrawImage(GetCursorIcon(),
+                                    new Rect(new Point(cursorCenterX, cursorCenterY),
+                                    new Size(cursorSize, cursorSize)));
+
+                            }
                         }
-                    }
 
-                    var png = Path.Combine(tempDir, $"{num}.jpg");
-                    using (FileStream stream = new FileStream(png, FileMode.Create))
-                    {
-                        var bitmap = new RenderTargetBitmap((int)screenWidth, (int)screenHeight, 96, 96, PixelFormats.Pbgra32);
-                        bitmap.Render(drawingVisual);
-                        var bitmapEncoder = BitmapFrame.Create(bitmap);
-                        var encoder = new JpegBitmapEncoder();
-                        encoder.QualityLevel = 50;
-                        encoder.Frames.Add(BitmapFrame.Create(bitmap));
-                        encoder.Save(stream);
-                        encoder.Frames.Clear();
-                        GC.Collect();
-                    }
-                }));
-            }
+                        var png = Path.Combine(tempDir, $"{num}.jpg");
+                        using (FileStream stream = new FileStream(png, FileMode.Create))
+                        {
+                            var bitmap = new RenderTargetBitmap((int)screenWidth, (int)screenHeight, 96, 96, PixelFormats.Pbgra32);
+                            bitmap.Render(drawingVisual);
+                            var bitmapEncoder = BitmapFrame.Create(bitmap);
+                            bitmapEncoder.Freeze();
+                            var encoder = new JpegBitmapEncoder();
+                            encoder.QualityLevel = 50;
+                            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                            encoder.Save(stream);
+                            encoder.Frames.Clear();
+                            GC.Collect();
+                        }
+                    }));
+                }
+            });
+            
             
         }
 
@@ -194,16 +201,24 @@ namespace DesktopRecord.Helper
                     {
                         using (var stream = new FileStream(file, FileMode.Open, FileAccess.Read))
                         {
-                            var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
-                            decoder.Frames[0].Freeze();
-                            gifBitmapEncoder.Frames.Add(decoder.Frames[0]);
+                            //var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+                            //decoder.Frames[0].Freeze();
+                            //gifBitmapEncoder.Frames.Add(decoder.Frames[0]);
+                            //GC.Collect();
+
+                            var bitmapDecoder = new JpegBitmapDecoder(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+                            var bitmapFrame = bitmapDecoder.Frames[0];
+                            bitmapDecoder.Frames[0].Freeze();
+                            gifBitmapEncoder.Frames.Add(bitmapFrame);
+                            bitmapFrame = null;
+                            bitmapDecoder = null;
                             GC.Collect();
+                            stream.Dispose();
                         }
                     }
                     gifBitmapEncoder.Save(gifFileStream);
                     gifBitmapEncoder.Frames.Clear();
                     gifBitmapEncoder = null;
-                    GC.Collect();
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
                 }

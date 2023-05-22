@@ -47,10 +47,6 @@ namespace DesktopRecord.Helper
             p.StartInfo = startInfo;
             p.Start();
             return true;
-            //p.BeginErrorReadLine();//开始异步读取
-            //p.WaitForExit();//阻塞等待进程结束
-            //p.Close();//关闭进程
-            //p.Dispose();//释放资源
         }
 
         /// <summary>
