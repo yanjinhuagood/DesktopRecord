@@ -23,7 +23,7 @@ namespace DesktopRecord.Helper
 
         #endregion
         // ffmpeg进程
-        static Process p;
+        static Process _process;
 
         // ffmpeg.exe实体文件路径
         static string ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg.exe");
@@ -35,17 +35,17 @@ namespace DesktopRecord.Helper
         {
             if(!File.Exists(ffmpegPath))
                 return false;
-            p = new Process();
-            ProcessStartInfo startInfo = new ProcessStartInfo(ffmpegPath);
-            startInfo.UseShellExecute = false;
-            startInfo.WindowStyle = ProcessWindowStyle.Normal;
-            startInfo.CreateNoWindow = true;  //不显示dos程序窗口
-            startInfo.RedirectStandardInput = true;
-            startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardError = true;//把外部程序错误输出写到StandardError流中
-            startInfo.Arguments = "-f gdigrab -framerate 30 -offset_x 0 -offset_y 0 -video_size 1600x900 -i desktop " + DateTime.Now.ToString("yyyyMMddHHmmss") + "_DesktopRecord.mpg ";
-            p.StartInfo = startInfo;
-            p.Start();
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = ffmpegPath,
+                Arguments = "-f gdigrab -framerate 30 -offset_x 0 -offset_y 0 -video_size 1920x1080 -i desktop -c:v libx264 -preset ultrafast -crf 0 " + DateTime.Now.ToString("yyyyMMddHHmmss") + "_DesktopRecord.mp4",
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            };
+            _process = new Process { StartInfo = processInfo };
+            _process.Start();
             return true;
         }
 
@@ -54,12 +54,16 @@ namespace DesktopRecord.Helper
         /// </summary>
         public static void Stop()
         {
-            if (p == null) return;
-            AttachConsole(p.Id);
+            if (_process == null) return;
+            AttachConsole(_process.Id);
             SetConsoleCtrlHandler(IntPtr.Zero, true);
             GenerateConsoleCtrlEvent(0, 0);
             FreeConsole();
-            p = null;
+            _process.StandardInput.Write("q");
+            if (!_process.WaitForExit(10000))
+            {
+                _process.Kill();
+            }
         }
     }
 }

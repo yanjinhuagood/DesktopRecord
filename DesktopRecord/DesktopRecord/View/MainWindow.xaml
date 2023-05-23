@@ -35,7 +35,7 @@
                         Style="{StaticResource WD.DangerPrimaryButton}" />
                 </StackPanel>
             </TabItem>
-            <TabItem Header="WindowsAPI 录制">
+            <TabItem Header="WindowsAPI 录制" Visibility="Collapsed">
                 <StackPanel
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
