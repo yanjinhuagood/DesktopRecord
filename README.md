@@ -14,7 +14,7 @@
 
 ### 方式二：  使用 `WindowsAPI` 实现录制屏幕  
 
-
+<img src="DesktopRecord/resources/WindowAPI.gif"/>
 
 
 ### [自定义高级控件](https://github.com/WPFDevelopersOrg/WPFDevelopers) https://github.com/WPFDevelopersOrg/WPFDevelopers  
