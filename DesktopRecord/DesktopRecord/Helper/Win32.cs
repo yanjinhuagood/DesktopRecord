@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Pipes;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -168,7 +163,7 @@ namespace DesktopRecord.Helper
                             bitmapEncoder.Freeze();
                             var encoder = new JpegBitmapEncoder();
                             encoder.QualityLevel = 50;
-                            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                            encoder.Frames.Add(bitmapEncoder);
                             encoder.Save(stream);
                             encoder.Frames.Clear();
                             GC.Collect();
@@ -187,75 +182,68 @@ namespace DesktopRecord.Helper
             Directory.CreateDirectory(tempDir);
         }
        
-        public static void Save(string Output)
+        public static void Save(string output)
         {
             try
             {
-                Output = Path.Combine(basePath, Output);
-                using (var gifFileStream = new FileStream(Output, FileMode.Create))
-                {
-                    var gifBitmapEncoder = new GifBitmapEncoder();
-                    var jpgs = Directory.GetFiles(tempDir, "*.jpg", SearchOption.TopDirectoryOnly);
-                    if (jpgs.Length == 0) return;
-                    foreach (string file in jpgs)
-                    {
-                        using (var stream = new FileStream(file, FileMode.Open, FileAccess.Read))
-                        {
-                            //var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
-                            //decoder.Frames[0].Freeze();
-                            //gifBitmapEncoder.Frames.Add(decoder.Frames[0]);
-                            //GC.Collect();
+                output = Path.Combine(basePath, output);
+                var imagePaths = Directory.GetFiles(tempDir, "*.jpg", SearchOption.TopDirectoryOnly);
+                if (imagePaths.Length == 0) return;
 
-                            var bitmapDecoder = new JpegBitmapDecoder(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
-                            var bitmapFrame = bitmapDecoder.Frames[0];
-                            bitmapDecoder.Frames[0].Freeze();
-                            gifBitmapEncoder.Frames.Add(bitmapFrame);
-                            bitmapFrame = null;
-                            bitmapDecoder = null;
-                            GC.Collect();
-                            stream.Dispose();
+                #region GC不释放，暂时弃用
+
+                //using (var gifFileStream = new FileStream(Output, FileMode.Create))
+                //{
+                //    var gifBitmapEncoder = new GifBitmapEncoder();
+                //    var jpgs = Directory.GetFiles(tempDir, "*.jpg", SearchOption.TopDirectoryOnly);
+                //    if (jpgs.Length == 0) return;
+                //    foreach (string file in jpgs)
+                //    {
+                //        using (var stream = new FileStream(file, FileMode.Open, FileAccess.Read))
+                //        {
+                //            var bitmapDecoder = new JpegBitmapDecoder(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+                //            var bitmapFrame = bitmapDecoder.Frames[0];
+                //            bitmapDecoder.Frames[0].Freeze();
+                //            gifBitmapEncoder.Frames.Add(bitmapFrame);
+                //            bitmapFrame = null;
+                //            bitmapDecoder = null;
+                //            GC.Collect();
+                //            stream.Dispose();
+                //        }
+                //    }
+                //    gifBitmapEncoder.Save(gifFileStream);
+                //    gifBitmapEncoder.Frames.Clear();
+                //    gifBitmapEncoder = null;
+                //    GC.Collect();
+                //    GC.WaitForPendingFinalizers();
+                //} 
+                #endregion
+
+
+                var bitmapFrames = new List<BitmapFrame>();
+                foreach (string imagePath in imagePaths)
+                {
+                    var frame = BitmapFrame.Create(new Uri(imagePath, UriKind.RelativeOrAbsolute));
+                    bitmapFrames.Add(frame);
+                }
+                using (var gifStream = new MemoryStream())
+                {
+                    using (var encoder = new GifEncoder(gifStream))
+                    {
+                        foreach (var imagePath in imagePaths)
+                        {
+                            var image = System.Drawing.Image.FromFile(imagePath);
+                            encoder.AddFrame(image, 0, 0, TimeSpan.FromSeconds(0));
                         }
                     }
-                    gifBitmapEncoder.Save(gifFileStream);
-                    gifBitmapEncoder.Frames.Clear();
-                    gifBitmapEncoder = null;
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
+                    gifStream.Position = 0;
+                    using (var fileStream = new FileStream(output, FileMode.Create))
+                    {
+                        fileStream.Write(gifStream.ToArray(), 0, gifStream.ToArray().Length);
+                    }
                 }
 
 
-
-
-                //using (var stream = new FileStream(Output, FileMode.Create))
-                //{
-                //    var encoder = new GifBitmapEncoder();
-                //    string[] imageFiles = Directory.GetFiles(tempDir, "*.jpg");
-                //    foreach (string imageFile in imageFiles)
-                //    {
-                //        using (var fileStream = new FileStream(imageFile, FileMode.Open))
-                //        {
-                //            var bitmap = new BitmapImage();
-                //            bitmap.DecodePixelWidth = 200;
-                //            bitmap.DecodePixelHeight = 200;
-                //            bitmap.BeginInit();
-                //            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                //            bitmap.StreamSource = fileStream;
-                //            bitmap.EndInit();
-                //            var frame = BitmapFrame.Create(bitmap);
-                //            encoder.Frames.Add(frame);
-                //            frame = null;
-                //            bitmap = null;
-                //            GC.Collect();
-                //            fileStream.Dispose();
-                //        }
-                //    }
-                //    encoder.Save(stream);
-                //    encoder.Frames.Clear();
-                //    encoder = null;
-                //    GC.Collect();
-                //    GC.WaitForPendingFinalizers();
-                //    encoder = new GifBitmapEncoder();
-                //}
             }
             catch
             {
