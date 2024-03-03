@@ -6,3 +6,10 @@
 /DesktopRecord/DesktopRecord/bin/Debug
 /DesktopRecord/DesktopRecord/obj/Debug
 /DesktopRecord/packages/WPFDevelopers.1.1.0.1-preview7
+*.dll
+*.config
+*.p7s
+*.nupkg
+*.xml
+*.txt
+*.targets

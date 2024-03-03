@@ -1,0 +1,31 @@
+﻿<UserControl
+    x:Class="DesktopRecord.View.CommOptionView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:DesktopRecord.View"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Grid>
+        <StackPanel
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Orientation="Horizontal">
+            <Button
+                Margin="0,0,5,0"
+                Command="{Binding RecordCommand}"
+                Content="开始录制"
+                Style="{StaticResource WD.SuccessPrimaryButton}" />
+            <Button
+                Margin="5,0,0,0"
+                wd:Loading.IsShow="{Binding IsShow}"
+                wd:Loading.LoadingType="Normal"
+                Command="{Binding RecordStopCommand}"
+                Content="停止录制"
+                Style="{StaticResource WD.DangerPrimaryButton}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

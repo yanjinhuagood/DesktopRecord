@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using WPFDevelopers.Controls;
 using WPFDevelopers.Helpers;
+using Win32 = DesktopRecord.Helper.Win32;
 
 namespace DesktopRecord.ViewModel
 {
@@ -14,6 +15,17 @@ namespace DesktopRecord.ViewModel
         private DispatcherTimer tm = new DispatcherTimer();
 
         public int currentCount = 0;
+
+        private RecordEnums _recordEnums;
+        public RecordEnums RecordEnums
+        {
+            get { return _recordEnums; }
+            set
+            {
+                _recordEnums = value;
+                NotifyPropertyChange(nameof(RecordEnums));
+            }
+        }
 
         private string myTime = "开始录制";
 
@@ -65,7 +77,7 @@ namespace DesktopRecord.ViewModel
                     if (!FFmpegHelper.Start())
                     {
                         App.Current.MainWindow.WindowState = System.Windows.WindowState.Normal;
-                        MessageBox.Show("未找到 【ffmpeg.exe】,请下载", "错误", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                        Message.Push("未找到 【ffmpeg.exe】,请下载", System.Windows.MessageBoxImage.Error);
                         return;
                     }
                     tm.Tick += tm_Tick;
@@ -119,6 +131,7 @@ namespace DesktopRecord.ViewModel
         }
         public ICommand RecordCommand { get; }
         public ICommand RecordStopCommand { get; }
+
         public MainVM()
         {
             RecordCommand = new RelayCommand(Record, CanExecuteRecordCommand);
@@ -127,7 +140,19 @@ namespace DesktopRecord.ViewModel
         void Record(object parameter)
         {
             App.Current.MainWindow.WindowState = System.Windows.WindowState.Minimized;
-            Win32.Start();
+            switch (RecordEnums)
+            {
+                case RecordEnums.FFmpeg:
+                    break;
+                case RecordEnums.WindowsAPI:
+                    Win32.Start();
+                    break;
+                case RecordEnums.Accord:
+                    AccordHelper.Start();
+                    break;
+                default:
+                    break;
+            }
             IsStart = false;
         }
 
@@ -139,9 +164,21 @@ namespace DesktopRecord.ViewModel
         {
             var task = new Task(() =>
             {
-                Win32.Stop();
+                switch (RecordEnums)
+                {
+                    case RecordEnums.FFmpeg:
+                        break;
+                    case RecordEnums.WindowsAPI:
+                        Win32.Stop();
+                        Win32.Save($"DesktopRecord_{DateTime.Now.ToString("yyyyMMddHHmmss")}.gif");
+                        break;
+                    case RecordEnums.Accord:
+                        AccordHelper.Stop();
+                        break;
+                    default:
+                        break;
+                }
                 IsShow = true;
-                Win32.Save($"DesktopRecord_{DateTime.Now.ToString("yyyyMMddHHmmss")}.gif");
             });
             task.ContinueWith(previousTask =>
             {

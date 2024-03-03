@@ -4,21 +4,54 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:view="clr-namespace:DesktopRecord.View"
     xmlns:vm="clr-namespace:DesktopRecord.ViewModel"
     xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
     Title="屏幕录制"
     Width="525"
     Height="200"
-    Icon="/screen.ico"
+    BorderBrush="{StaticResource WD.DangerSolidColorBrush}"
+    BorderThickness="1"
+    NoChrome="True"
     ResizeMode="CanMinimize"
+    TitleBackground="{StaticResource WD.DangerSolidColorBrush}"
+    TitleHeight="30"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
-    <wd:Window.DataContext>
-        <vm:MainVM />
-    </wd:Window.DataContext>
+    <wd:Window.TitleBar>
+        <Grid Height="40" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" MinWidth="30" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                Margin="10,0"
+                VerticalAlignment="Center"
+                Foreground="{StaticResource WD.WindowForegroundColorBrush}"
+                IsHitTestVisible="False"
+                Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=Title}" />
+            <Button
+                x:Name="CloseButton"
+                Grid.Column="2"
+                Width="30"
+                Height="30"
+                HorizontalAlignment="Right"
+                wd:ElementHelper.IsRound="True"
+                Click="CloseButton_Click"
+                Style="{StaticResource WD.NormalButton}"
+                ToolTip="关闭">
+                <wd:PathIcon
+                    Width="10"
+                    Height="10"
+                    Foreground="{DynamicResource WD.WindowForegroundColorBrush}"
+                    Kind="WindowClose" />
+            </Button>
+        </Grid>
+    </wd:Window.TitleBar>
     <Grid>
         <TabControl>
-            <TabItem Header="ffmpeg 录制">
+            <TabItem Height="35" Header="ffmpeg 录制">
                 <StackPanel
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
@@ -35,24 +68,19 @@
                         Style="{StaticResource WD.DangerPrimaryButton}" />
                 </StackPanel>
             </TabItem>
-            <TabItem Header="WindowsAPI 录制">
-                <StackPanel
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Orientation="Horizontal">
-                    <Button
-                        Margin="0,0,5,0"
-                        Command="{Binding RecordCommand}"
-                        Content="开始录制"
-                        Style="{StaticResource WD.SuccessPrimaryButton}" />
-                    <Button
-                        Margin="5,0,0,0"
-                        wd:Loading.Child="{x:Static wd:NormalLoading.Default}"
-                        wd:Loading.IsShow="{Binding IsShow}"
-                        Command="{Binding RecordStopCommand}"
-                        Content="停止录制"
-                        Style="{StaticResource WD.DangerPrimaryButton}" />
-                </StackPanel>
+            <TabItem Height="35" Header="WindowsAPI 录制">
+                <view:CommOptionView>
+                    <view:CommOptionView.DataContext>
+                        <vm:MainVM RecordEnums="WindowsAPI" />
+                    </view:CommOptionView.DataContext>
+                </view:CommOptionView>
+            </TabItem>
+            <TabItem Height="35" Header="Accord 录制">
+                <view:CommOptionView>
+                    <view:CommOptionView.DataContext>
+                        <vm:MainVM RecordEnums="Accord" />
+                    </view:CommOptionView.DataContext>
+                </view:CommOptionView>
             </TabItem>
         </TabControl>
     </Grid>
