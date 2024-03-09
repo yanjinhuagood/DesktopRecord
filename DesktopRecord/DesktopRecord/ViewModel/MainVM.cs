@@ -84,10 +84,10 @@ namespace DesktopRecord.ViewModel
                     tm.Interval = TimeSpan.FromSeconds(1);
                     tm.Start();
                     IsStart = false;
-               }, a =>
-                {
-                return IsStart;
-                }));
+                }, a =>
+                 {
+                     return IsStart;
+                 }));
             }
         }
         private void tm_Tick(object sender, EventArgs e)
