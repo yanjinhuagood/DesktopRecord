@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -33,12 +34,18 @@ namespace DesktopRecord.Helper
         /// </summary>
         public static bool Start()
         {
-            if(!File.Exists(ffmpegPath))
+            if (!File.Exists(ffmpegPath))
                 return false;
+            Size size = WindowHelper.GetMonitorSize();
+            string dpi = size.Width + "x" + size.Height;
             var processInfo = new ProcessStartInfo
             {
                 FileName = ffmpegPath,
-                Arguments = "-f gdigrab -framerate 30 -offset_x 0 -offset_y 0 -video_size 1920x1080 -i desktop -c:v libx264 -preset ultrafast -crf 0 " + DateTime.Now.ToString("yyyyMMddHHmmss") + "_DesktopRecord.mp4",
+                // Arguments = "-f gdigrab -framerate 30 -offset_x 0 -offset_y 0 -video_size 1920x1080 -i desktop -c:v libx264 -preset ultrafast -crf 0 " + DateTime.Now.ToString("yyyyMMddHHmmss") + "_DesktopRecord.mp4",
+                Arguments = String.Format("-f gdigrab -framerate 30 -offset_x 0 -offset_y 0 -video_size {0} -i desktop -c:v libx264 -preset ultrafast -crf 0 {1}{2}",
+                    dpi,
+                    DateTime.Now.ToString("yyyyMMddHHmmss"),
+                    "_DesktopRecord.mp4"),
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
